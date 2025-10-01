@@ -30,8 +30,12 @@ export const mealApi = createApi({
 
                 return { data: deduped }
             }
+        }),
+        getMealById: builder.query({
+            query: (id) => `lookup.php?i=${encodeURIComponent(id)}`,
+            transformResponse: (res) => res.meals?.[0] ?? null
         })
     })
 })
 
-export const { useSearchMealsQuery, useGetRandomMealsQuery } = mealApi;
+export const { useSearchMealsQuery, useGetRandomMealsQuery, useGetMealByIdQuery } = mealApi;

@@ -3,3 +3,9 @@ export type Meal = {
     strMeal: string;
     strMealThumb: string;
 }
+
+export type MealDetail = Meal & {
+    strInstructions?: string;
+    strCategory?: string;
+    strArea?: string;
+}

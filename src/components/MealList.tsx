@@ -5,9 +5,10 @@ import type { Meal } from "../lib/types.ts";
 type MealListProps = {
   meals: Meal[];
   loading: boolean;
+  onSelect: (id: string) => void;
 };
 
-export const MealList = ({ meals, loading }: MealListProps) => {
+export const MealList = ({ meals, loading, onSelect }: MealListProps) => {
   return (
     <div
       className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10"
@@ -15,7 +16,9 @@ export const MealList = ({ meals, loading }: MealListProps) => {
     >
       {loading
         ? Array.from({ length: 8 }).map((_, i) => <Loader key={i} />)
-        : meals.map((m) => <MealCard key={m.idMeal} data={m} />)}
+        : meals.map((m) => (
+            <MealCard key={m.idMeal} data={m} onSelect={onSelect} />
+          ))}
     </div>
   );
 };
