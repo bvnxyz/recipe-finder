@@ -1,73 +1,79 @@
-# React + TypeScript + Vite
+# RecipeFinder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Search meals from **TheMealDB** with a clean **React + TypeScript** UI, **Redux Toolkit (RTK Query)** data layer, and **TailwindCSS** styling.  
+When the search is empty, the app shows a handful of random meals; typing a query (≥ 3 chars) fetches and shows matching meals. Clicking a meal opens a details modal (via React Portal).
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React** + **TypeScript**
+- **Redux Toolkit** + **RTK Query**
+- **TailwindCSS**
+- **Vite**
 
-## React Compiler
+## Features (MVP)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Empty search state** → show ~8 random meals (`random.php`)
+- **Search by name** → `search.php?s=<query>` (debounced in UI; triggers when `query.length >= 3`)
+- **Responsive grid** → `grid-cols-1/2/3/4` with gaps
+- **Skeleton loading** for cards
+- **Meal details modal** (React Portal)
+  - Fetches full meal by id: `lookup.php?i=<id>`
+  - ESC to close, backdrop click to close, initial focus, body scroll lock
 
-## Expanding the ESLint configuration
+## API (TheMealDB)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Search by name**: `GET /search.php?s=<query>`
+- **Random meal**: `GET /random.php` (used multiple times to build an initial set)
+- **Lookup by ID**: `GET /lookup.php?i=<id>`
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+> Base URL is configurable via env: `https://www.themealdb.com/api/json/v1/1`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Project Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+src/
+app/ # Redux store setup
+components/ # UI components (SearchBar, MealCard, MealList, Modal, Loader...)
+lib/ # types, small utils (e.g., debounce)
+pages/ # Home, (planned) Favorites
+services/ # RTK Query API (mealApi)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## State & Data Flow
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **RTK Query** drives data fetching and caching:
+  - `mealApi.searchMeals(query)` → transforms `meals: null` to `[]`
+  - `mealApi.getRandomMeals()` → runs several `random.php` calls, dedupes by `idMeal`
+  - `mealApi.getMealById(id)` → used by the modal
+- **Container pattern**:
+  - `Home` owns `query` and decides which hook to call (`random` vs `search`)
+  - `MealList` is presentational and renders `meals` + `loading`
+  - `MealCard` is clickable and opens the modal (doesn’t fetch itself)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Environment
+
+Create a `.env` (or `.env.local`) at the project root:
+
+```env
+VITE_MEALDB_BASE_URL=https://www.themealdb.com/api/json/v1/1
 ```
+
+## Getting started
+
+- npm install
+- npm run dev
+- npm build
+- npm preview
+
+## TO DO
+
+- **Add favourites functionality**
+  - Heart icon on each card (outline vs filled)
+  - Persist favourites in localStorage via a small Redux slice and selectors
+  - A Favorites page/section showing saved items
+- **Add tests**
+  - Unit tests (components, selectors, reducers) with Vitest + @testing-library/react
+  - Integration tests for search→list and modal open/close flows
+- **Add a simple CI/CD YAML file**
+  - GitHub Actions workflow to install deps, cache, build, and run tests on PRs
+
